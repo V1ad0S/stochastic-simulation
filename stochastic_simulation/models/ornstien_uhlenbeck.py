@@ -1,9 +1,11 @@
 import numpy as np
 from numpy.typing import ArrayLike
+import scipy.stats as sps
 
 from stochastic_simulation.wiener import generate
 from stochastic_simulation.models.base_model \
         import BaseModelDifferentiable, args2arrays_decorator
+from stochastic_simulation.random_number_generator import BaseRNG
 
 
 class OrnsteinUhlenbeck(BaseModelDifferentiable):
@@ -28,6 +30,9 @@ class OrnsteinUhlenbeck(BaseModelDifferentiable):
         xt = np.insert(xt, 0, self.x_0, axis=-1)
         return ts, xt
 
+    def get_generator(self):
+        return OURNG(self.x_0, self.th, self.mu, self.sig)
+
     @args2arrays_decorator
     def rate(self, _t: ArrayLike, xt: ArrayLike):
         return self.th * (self.mu - xt) # type: ignore
@@ -46,3 +51,28 @@ class OrnsteinUhlenbeck(BaseModelDifferentiable):
 
     def sigma_xx(self, _t, _xt):
         return 0
+
+
+class OURNG(BaseRNG):
+    def __init__(self, x_0, theta, mu, sigma):
+        super().__init__(x_0)
+        self.th = theta
+        self.mu = mu
+        self.sig = sigma
+
+    def __rng(self, x_prev: float, dt: float):
+        mean = self.mu + (x_prev - self.mu) * np.exp(-self.th * dt)
+        var = 0.5 * self.sig**2 * (1 - np.exp(-2 * self.th * dt)) / self.th
+        return sps.norm(mean, var**0.5)
+
+    def gen_next(self, x_prev: float, dt: float):
+        return self.__rng(x_prev, dt).rvs()
+
+    def cdf(self, x_prev: float, dt: float, x_grid):
+        return self.__rng(x_prev, dt).cdf(x_grid)
+
+    def pdf(self, x_prev: float, dt: float, x_grid):
+        return self.__rng(x_prev, dt).pdf(x_grid) # type: ignore
+
+    def ppf(self, x_prev: float, dt: float, x_grid):
+        return self.__rng(x_prev, dt).ppf(x_grid)

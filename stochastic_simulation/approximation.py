@@ -45,7 +45,7 @@ def predictor_corrector_approximate(model: BaseModelDifferentiable,
     rate_corr = lambda t, x: model.rate(t, x) - eta * model.sigma(t, x) \
                                                     * model.sigma_x(t, x)
     xt = [model.x_0]
-    for i, dw in zip(range(0, number_of_points-1), np.diff(wieners)):
+    for i, dw in zip(range(number_of_points - 1), np.diff(wieners)):
         dt = ts[i+1] - ts[i]
         x_pred = xt[-1] + model.rate(ts[i], xt[-1]) * dt\
                         + model.sigma(ts[i], xt[-1]) * dw
