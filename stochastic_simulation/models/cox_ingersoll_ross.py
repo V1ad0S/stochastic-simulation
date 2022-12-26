@@ -67,8 +67,8 @@ class CIRRNG(BaseRNG):
 
     def pdf(self, x_prev: float, dt: float, x_grid: ArrayLike):
         c, rng = self.__rng(x_prev, dt)
-        return rng.pdf(x_grid * 2 * c) # type: ignore
+        return rng.pdf(x_grid * 2 * c) * 2 * c # type: ignore
 
     def ppf(self, x_prev: float, dt: float, x_grid: ArrayLike):
         c, rng = self.__rng(x_prev, dt)
-        return rng.ppf(x_grid) / 2 / c # type: ignore
+        return 0.5 * rng.ppf(x_grid) / c # type: ignore
